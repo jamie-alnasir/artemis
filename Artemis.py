@@ -1639,7 +1639,7 @@ def main():
 		print "Artemis - Python molecular library for Brookhaven PDB files";	
 		print "Copyright (c) 2014 Jamie J. Al-Nasir, All Rights Reserved";
 		print "";
-		print "Usage Artmis.py <file.pdb>";
+		print "Usage Artemis.py <file.pdb>";
 		print "";
 
 
