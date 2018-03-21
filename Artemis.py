@@ -1,16 +1,29 @@
 #!/usr/bin/python
 #//==============================================================================
 #// Artemis - Python molecular library for Brookhaven PDB files
-#// By Jamie Al-Nasir, 07/2014 
+#// By Jamie Alnasir, 07/2014 
 #// Royal Holloway University of London
 #// CSSB - Centre for Systems and Synthetic Biology, dept. Computer Science
-#// Copyright (c) 2014 Jamie J. Al-Nasir, All Rights Reserved
+#// Copyright (c) 2014 Jamie J. Alnasir, All Rights Reserved
 #//==============================================================================
 #// Version: Python edition
 #//==============================================================================
 
 import sys;
 import math;
+
+
+# The default example is to produce a report of the atoms in the PDB model by residue
+# and list the bonds computed/found within those residues.
+
+# Implementation to go in Implementation commented block towards the end of this
+# source code file.
+
+# Activities to perform (functional implementation provided):
+_PRINT_RESIDUES_  = True;    # Print list of residue.
+_PRINT_RES_BONDS_ = True;     # Print list of residue bonds (No effect if _PRINT_RESIDUES_=False).
+_PRINT_DIHEDRALS_ = True;    # Print list of torsional/dihedral angles, by residue
+
 
 def main():
 	# Define our own Enum (Python 3.4 has it's own enum type)
@@ -1500,12 +1513,7 @@ def main():
 		# NB molecular geometry calculations can be used for a variety of computation tasks
 		# such as calculating bond lengths and torsional/dihedral angles.
 	
-		# Default example is to produce a report of the atoms in the PDB model by residue
-		# and list the bonds computed/found within those residues.
-
-		# Activities to perform:
-		bBonds     = True;
-		bDihedrals = True;
+		
 		
 		
 		# -----------------------------------------------------------------------------
@@ -1536,20 +1544,22 @@ def main():
 
 		for aChain in PDBModel.lstChains:
 			print "Chain: " + aChain;
-			for aRes in PDBModel.getResByChainID(aChain):			
-				print "\n";
-				print "Residue: " + aRes.res_name + aRes.res_seq;
-				aRes.ComputeResBonds();
-				print "chain \t name \t residue x \t y \t z";
-				for anAtom in aRes.lstAtoms:
-					print aChain + "\t" + anAtom.name + "\t" + anAtom.res_name + anAtom.res_seq + "\t" + anAtom.x + "\t" + anAtom.y + "\t" + anAtom.z + "\t";
-				if bBonds:
+			if _PRINT_RESIDUES_:
+				for aRes in PDBModel.getResByChainID(aChain):			
 					print "\n";
-					print str(len(aRes.lstBonds)) + " Covalent bond(s) computed within this Residue:";
-					for aBond in aRes.lstBonds:
-						print aBond.getBondName();
+					print "Residue: " + aRes.res_name + aRes.res_seq;
+					aRes.ComputeResBonds();
+					print "chain \t name \t residue x \t y \t z";
+					for anAtom in aRes.lstAtoms:
+						print aChain + "\t" + anAtom.name + "\t" + anAtom.res_name + anAtom.res_seq + "\t" + anAtom.x + "\t" + anAtom.y + "\t" + anAtom.z + "\t";
+				
+					if _PRINT_RES_BONDS_:
+						print "\n";
+						print str(len(aRes.lstBonds)) + " Covalent bond(s) computed within this Residue:";
+						for aBond in aRes.lstBonds:
+							print aBond.getBondName();
 
-			if bDihedrals:
+			if _PRINT_DIHEDRALS_:
 				print "\n";
 				print "Dihedral/Torsional angles for residues in chain " + aChain + ":";
 				aRes = PDBModel.getResByChainID(aChain);			
@@ -1638,6 +1648,8 @@ def main():
 	else:
 		print "Artemis - Python molecular library for Brookhaven PDB files";	
 		print "Copyright (c) 2014 Jamie J. Al-Nasir, All Rights Reserved";
+		print "";
+		print "Build on the code, or provide a PDB file to process:";
 		print "";
 		print "Usage Artemis.py <file.pdb>";
 		print "";
