@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.10)
+project(ArtemisCpp LANGUAGES CXX)
+
+add_executable(artemis artemis.cpp)
+set_target_properties(artemis PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+if(MSVC)
+    target_compile_options(artemis PRIVATE /W4 /EHsc)
+else()
+    target_compile_options(artemis PRIVATE -Wall -Wextra -pedantic)
+endif()
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(test_artemis tests/test_artemis.cpp)
+    set_target_properties(test_artemis PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+    add_test(NAME artemis_regression COMMAND test_artemis)
+endif()
