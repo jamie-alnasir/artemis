@@ -1,7 +1,8 @@
 // Artemis - portable C++11 edition of Artemis3.py
 // Original: Jamie J. Alnasir, 2014, Royal Holloway University of London, CSSB.
-// Copyright (c) 2014 Jamie J. Alnasir, All Rights Reserved.
-// C++ port: October 2026. Only the C++ standard library is required.
+// Copyright (c) 2014-2026 Jamie J. Alnasir, All Rights Reserved.
+// C++ port: October 2026. No third-party libraries are required.
+// The only platform-specific call detects whether standard input is a terminal.
 // Build: c++ -std=c++11 -O2 -Wall -Wextra -pedantic artemis.cpp -o artemis
 // Define ARTEMIS_NO_MAIN to include this file in another C++ program.
 #include <algorithm>
@@ -22,6 +23,12 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <cstdio>
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace artemis {
 using std::string;
@@ -1105,13 +1112,15 @@ using TPDBModel=Model;
 
 struct Options {
     string input="-",output,chain; long model=0;
+    bool input_provided=false;
     bool chain_set=false,no_residues=false,no_bonds=false,no_dihedrals=false,quiet=false,help=false;
 };
 struct ArgumentError:std::runtime_error { explicit ArgumentError(const string& message):std::runtime_error(message) {} };
 inline void help(std::ostream& out) {
     out << "Usage: artemis [options] [PDB]\n\n"
         "Artemis: PDB residues, intra-residue bonds and backbone dihedral angles.\n"
-        "PDB omitted or '-' reads standard input.\n\n"
+        "PDB omitted reads piped/redirected input; a bare terminal invocation shows help.\n"
+        "Use '-' explicitly to read stdin interactively.\n\n"
         "  --no-residues       Suppress the atom/residue listing; bonds remain independent\n"
         "  --no-bonds          Skip bond calculations and reports\n"
         "  --no-dihedrals      Skip dihedral calculations and reports\n"
@@ -1161,7 +1170,7 @@ inline Options parse_options(int argc,char** argv) {
             continue;
         }
         if (positional) throw ArgumentError("Only one input PDB can be supplied");
-        o.input=arg; positional=true;
+        o.input=arg; o.input_provided=true; positional=true;
     }
     return o;
 }
@@ -1211,10 +1220,21 @@ inline void report(Model& model,const Options& o,std::ostream& out) {
         begin=end;
     }
 }
+inline bool stdin_is_terminal() {
+#if defined(_WIN32)
+    return _isatty(_fileno(stdin)) != 0;
+#else
+    return isatty(fileno(stdin)) != 0;
+#endif
+}
 inline int run(int argc,char** argv) {
     try {
         Options options=parse_options(argc,argv);
         if (options.help) { help(std::cout); return 0; }
+        if (!options.input_provided && stdin_is_terminal()) {
+            if (argc==1) { help(std::cout); return 0; }
+            throw ArgumentError("Provide a PDB filename, pipe PDB data, or use '-' explicitly for stdin");
+        }
         Model model;
         if (options.input=="-") model.load(std::cin); else model.load_file(options.input);
         if (model.atom_count()==0) throw std::invalid_argument("No ATOM records found in input (HETATM-only files are not analysed)");
